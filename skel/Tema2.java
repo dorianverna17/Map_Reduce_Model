@@ -6,7 +6,7 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ForkJoinPool;
 
 public class Tema2 {
-    public static final String separators = "[.;, ]";
+    public static final String separators = "[\r\n\t|\"*=‘+_\\-&^%$#@!\\(\\){}\\]\\['><\\~?/:.;, ]";
     public static int bytes_read;
 
     public static HashMap<String, ArrayList<ReduceTask>> reduce_tasks;
@@ -100,6 +100,11 @@ public class Tema2 {
                 }
             }
         }
+        if (doc_files.size() < workers_count) {
+            for (int i = 0; i < workers_count - doc_files.size(); i++) {
+                worker_assignment.add(new ArrayList<>());
+            }
+        }
 
         // initialize the results
         results = new ArrayList<>();
@@ -135,9 +140,12 @@ public class Tema2 {
             e.printStackTrace();
         }
         for (int i = 0; i < results.size() - 1; i++) {
+            String name_file = results.get(i).doc_name;
+            String name_file_less;
+            name_file_less = name_file.substring(name_file.lastIndexOf("/") + 1);
             if (writer_file != null) {
                 try {
-                    writer_file.write(results.get(i).doc_name + "," +
+                    writer_file.write(name_file_less + "," +
                             String.format("%.2f", results.get(i).rank) + "," + results.get(i).max_length + "," +
                             results.get(i).max_length_count + "\n");
                 } catch (IOException e) {
@@ -146,12 +154,17 @@ public class Tema2 {
             }
         }
         if (writer_file != null) {
-            Result res = results.get(results.size() - 1);
-            try {
-                writer_file.write(res.doc_name + "," + String.format("%.2f", res.rank) + ","
-                        + res.max_length + "," + res.max_length_count + "\n");
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (results.size() != 0) {
+                Result res = results.get(results.size() - 1);
+                String name_file = res.doc_name;
+                String name_file_less;
+                name_file_less = name_file.substring(name_file.lastIndexOf("/") + 1);
+                try {
+                    writer_file.write(name_file_less + "," + String.format("%.2f", res.rank) + ","
+                            + res.max_length + "," + res.max_length_count);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             try {
                 writer_file.close();

@@ -162,10 +162,12 @@ public class MapReduceTask implements Runnable {
 
     public void assignReduceTasks() {
         worker_reduce_tasks = new ArrayList<>();
-
-        for (int i = 0; i < Tema2.worker_assignment.get(id).size(); i++) {
-            String file_name = Tema2.worker_assignment.get(id).get(i);
-            worker_reduce_tasks.add(Tema2.reduce_tasks.get(file_name));
+        
+        if (Tema2.worker_assignment.get(id) != null) {
+            for (int i = 0; i < Tema2.worker_assignment.get(id).size(); i++) {
+                String file_name = Tema2.worker_assignment.get(id).get(i);
+                worker_reduce_tasks.add(Tema2.reduce_tasks.get(file_name));
+            }
         }
     }
 
@@ -189,6 +191,9 @@ public class MapReduceTask implements Runnable {
         for (int i = 0; i < worker_reduce_tasks.size(); i++) {
             Result res = new Result();
             ArrayList<ReduceTask> arr_tasks = worker_reduce_tasks.get(i);
+            
+            total_words = 0;
+            sum = 0;
 
             // create a greater Reduce task out of this list
             ReduceTask t = new ReduceTask();
