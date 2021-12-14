@@ -1,0 +1,108 @@
+Verna Dorian-Alexandru 334CC
+
+Dificultate: Medie -> Mai usoara ca prima tema (putin mai mult de scris)
+Timp: ~10-12 ore
+
+Mi-am impartit implementarea in 5 clase pe care le am facute in
+fisierele MapReduceTask.java, MapTask.java, ReduceTask.java, Result.java
+si Tema2.java. Toate clasele sunt publice.
+
+
+Ca si implementare am ales sa ma folosesc de simple thread-uri pt modelul
+Map Reduce si sa folosesc o bariera pentru a ma asigura ca toate operatile
+de Map se termina inainte de a realiza operatiile de reduce.
+
+O sa iau fiecare clasa pe rand si voi explica ce reprezinta fiecare si voi
+da detalii despre implementarea lor. Am pus si comentarii in cod acolo
+unde am considerat necesar.
+
+Clasa Tema2:
+
+-> Aici incep prin a prelua argumentele, prin a citi din fisierul de intrare.
+Imi construiesc o lista cu numele fiecarui document care trebuie analizat.
+Apoi construiesc o lista de task-uri de tip Map (clasa MapTask).
+Mai am si un HashMap unde voi retine task-urile de tipul Reduce. HashMap-ul
+il populez in etapa de Map. Apoi am un for unde creez fiecare task de Map
+(populez mai multe obiecte MapTask pe care le pun in lista de task-uri aferenta
+worker-ului care trebuie sa execute task-ul -> aici fac prima impartire a
+task-urilor de tip Map -> nu verific inca daca ma aflu in mijlocul cuvintelor,
+deoarece nu fac incarcarea partii aferente a documentului in memorie decat
+atunci cand sunt in interiorul/thread-ului aferent). Lista de task-uri este
+de fapt o lista de liste (fiecare worker are o lista de task-uri).
+Apoi imi initializez lista de rezultate (obiecte de tipul Result), bariera.
+Dupa aceea pornesc workerii (thread-urile). Dupa aceea le astept terminarea
+(adica atunci cand se termina si operatia de Map si operatia de Reduce).
+Am ales sa pornesc workerii o singura data la inceput si sa ii sincronizez
+eu personal pentru a incepe Reduce atunci cand toate thread-urile termina
+Map. Dupa aceea, sortez rezultatele si mai apoi afisez in fisier conform
+formatului cerut informatiile necesare.
+De asemenea, unii membri ai clasei precum hashmap-ul sunt statice pentru
+a le putea accesa prin thread-uri. Mi-am declarat si niste instante Object
+pentru a le folosi ca lock-uri in blocuri synchronized.
+
+Clasa MapReduceTask:
+
+-> Implementeaza Runnable. Aici am metoda run din care trec mai departe
+in performOperation unde apelez 4 metode, 2 pentru Map, dupa care pun
+thread-urile sa se astepte la o bariera. Dupa aceasta urmatoarele 2 metode
+se ocupa de Reduce.
+
+	- modifyTaskMapOperation -> metoda in care citesc din fisier octetii
+corespunzatori si mai apoi fac modificarile astfel incat sa ma asigur ca
+studiez doar siruri care nu incep sau se termina in mijlocul cuvintelor.
+Modificarile le fac asa cum este spus in enunt. Abia acum incarc atat cat
+trebuie din fiecare fisier in worker (folosesc lista task_strings pentru
+a stoca rezultatele acestei metode)
+
+	- solveMapOperation -> metoda care realizeaza operatia propriu zisa de
+Map. Aici preiau fiecare sir si pentru fiecare populez un obiect de tipul
+ReduceTask care o sa vina folosit mai departe in etapa de Reduce -> este
+posibil sa ajunga sa fie folosit de un alt worker, deoarece populez un
+hashmap de task-uri de tipul Reduce care se afla in Tema2 (fac acest lucru
+intr-un bloc synchronized pentru a evita modificarea simultana a aceleiasi
+resurse de catre mai multi workeri).
+
+	- assignReduceTask -> in aceasta metoda aleg ce task-uri de tipul
+Reduce sa isi aleaga worker-ul curent (acesta va prelua toate task-urile
+care tin de un document, dar poate lua si mai multe documente).
+
+	- metoda solveReduceTask rezolva task-urile de tipul Reduce. Se foloseste
+de metoda compute_fibonacci care imi returneaza elementul din sirul lui
+Fibonacci care ne intereseaza pe noi. Pentru fiecare document rezolvat
+(caruia i-a fost calculat rang-ul si gasita lungimea cuvantului maxim,
+precum si cate astfel de cuvinte sunt) se formeaza un obiect Result care
+este adaugat unei liste de rezultate (statica din clasa Tema2, deci
+construita in cadrul unui bloc synchronized).
+
+Clasa MapTask:
+
+-> Defineste un task pentru operatia de tip Map. la fel ca in enuntul
+problemei, task-ul primeste ca input numele documentului, offset-ul
+si lungimea documentului, iar ca membrii auxiliari pe care ii folosesc pentru
+a stoca rezultatele un hashmap pentru lungimile cuvintelor si nr de cuvinte
+cu lungimile respective si un ArrayList pentru cuvintele de lungime maxima.
+
+Clasa ReduceTask:
+
+-> Defineste un task pentru operatia de tip Reduce. Il populez cu
+hashmap-ul si cu lista de cuvinte maximale rezultate din cadrul operatiei
+de tip Map ale task-ului aferent.
+
+Clasa Result:
+
+-> Reprezinta rezultatul unui Task de tipul Reduce. Implementeaza Comparable,
+deoarece vreau sa sortez dupa rank atunci cand a fost terminata operatia de
+tip Reduce pentru toti workerii. Mai contine si numele documentului,
+lungimea cuvantului maxim si cate astfel de cuvinte am.
+
+Din punctul meu de vedere a fost o tema ok. M-am complicat eu cam mult cu
+implementarea aleasa, dar a fost prima idee la care m-am gandit. Nu prea mi-am
+dorit sa fac cu ExecutorService si am ales pana la urma sa fac simplu cu thread-uri.
+
+Mi s-a parut o tema interesanta si consider ca am invatat mult mai bine sa
+folosesc thread-urile in Java precum si ce inseamna Modelul Map Reduce.
+
+Felicitari pentru tema si keep up the good work!
+
+Verna Dorian-Alexandru
+334CC
